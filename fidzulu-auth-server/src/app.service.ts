@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Connection } from 'oracledb';
-import { ORACLE_CONNECTION } from './providers/oracle.provider';
+import { ORACLE_CONNECTION } from './providers/oracle/oracle.provider';
 
 @Injectable()
 export class AppService {
