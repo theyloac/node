@@ -3,6 +3,7 @@ import * as oracledb from 'oracledb';
 import { Connection } from 'oracledb';
 import { ORACLE_CONNECTION } from '../providers/oracle/oracle.provider';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 
 // AuthService encapsulates the business logic related to authentication.
 // It is responsible for talking to the database layer (via an Oracle
@@ -23,6 +24,8 @@ export class AuthService {
    * @param ip  - IP address of the client (provided by controller)
    * @returns whatever the PL/SQL function returns (often a token or status code)
    */
+
+    // LOGIN METHOD
     async login(dto: LoginDto, ip: string): Promise<any> {
         // This is an anonymous PL/SQL block that calls the login_user procedure in the auth_pkg package.
         // Avoiding SQL injection is crucial, so we use bind variables (the :param syntax) instead of string concatenation.
@@ -54,4 +57,33 @@ export class AuthService {
             role: result.outBinds?.role
         }
     }
+
+    // REGISTER METHOD
+    async register (dto: RegisterDto): Promise<any>{
+        const sql = `BEGIN
+        :userId := auth_pkg.register_user(
+            p_firstname => :firstname,
+            p_lastname => :lastname,
+            p_username => :username,
+            p_email => :email,
+            p_password => :password
+        );
+        END;`;
+
+        const binds = {
+            firstname: dto.firstname;
+            lastname: dto.lastname;
+            username: dto.username;
+            email: dto.email;
+            password: dto.password;
+            userId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+        } as any;
+
+        const result = await this.conn.execute(sql, binds);
+        return {
+            user_id: result.outBinds?.userId
+        };
+    }
+
+
 }
