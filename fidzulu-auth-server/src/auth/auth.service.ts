@@ -10,35 +10,48 @@ import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
-  // The Oracle connection is injected using a custom provider token. This
-  // keeps the database logic separate from the service and makes it easier to
-  // mock during tests.
-  constructor(@Inject(ORACLE_CONNECTION) private readonly conn: Connection) {}
+    // @Inject tells Nest to inject the Oracle connection that we defined in the provider.
+    // ORACLE_CONNECTION is the token we used to register the provider, so Nest knows which dependency to inject here.
+    // private readonly conn: Connection is the actual Oracle connection instance that we can use 
+    // to execute SQL statements and call PL/SQL procedures only in this class
+    constructor(@Inject(ORACLE_CONNECTION) private readonly conn: Connection) {}
 
-  /**
+    /**
    * Perform a login operation.
    *
    * @param dto - data transfer object containing username/password
    * @param ip  - IP address of the client (provided by controller)
    * @returns whatever the PL/SQL function returns (often a token or status code)
    */
-  async login(dto: LoginDto, ip: string): Promise<any> {
-    // We construct a PL/SQL anonymous block that calls the package function.
-    // The ':ret' bind is the return value, the rest correspond to parameters.
-    const sql = 'BEGIN :ret := FIDZULU.Auth_Pkg.login(:username, :password, :ip); END;';
+    async login(dto: LoginDto, ip: string): Promise<any> {
+        // This is an anonymous PL/SQL block that calls the login_user procedure in the auth_pkg package.
+        // Avoiding SQL injection is crucial, so we use bind variables (the :param syntax) instead of string concatenation.
+        const sql = `BEGIN
+        :token :=auth_pkg.login_user(
+            p_email => :email,
+            p_password => :password,
+            p_ip => :ip,
+            p_user_id => :userId,
+            p_role => :role);
+            END;`;
 
-    // Binds object maps JS values to Oracle bind variables. Notice that 'ret'
-    // is an OUT parameter so we declare direction and type.
-    const binds = {
-      ret: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
-      username: dto.username,
-      password: dto.password,
-      ip,
-    } as any;
 
-    // Execute the statement and return the output bind value. Using the
-    // connection directly keeps this service thin and focused.
-    const result = await this.conn.execute(sql, binds);
-    return result.outBinds?.ret;
-  }
+        // Bind is how we pass parameters to the PL/SQL block. We specify the direction (IN/OUT) and type for each parameter.
+        const binds = {
+            email : dto.email,
+            password : dto.password,
+            ip: ip,
+            token: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
+            userId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+            role: { dir: oracledb.BIND_OUT, type: oracledb.STRING }
+        } as any; // 'as any' is used to satisfy TypeScript since the shape of binds is dynamic based on the PL/SQL procedure signature.
+    
+        // Execute the PL/SQL block with the provided SQL and binds. The result will contain the OUT parameters after execution.
+        const result = await this.conn.execute(sql, binds);
+        return {
+            token: result.outBinds?.token,
+            user_id: result.outBinds?.userId,
+            role: result.outBinds?.role
+        }
+    }
 }

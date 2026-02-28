@@ -42,14 +42,14 @@ CREATE OR REPLACE PACKAGE BODY auth_pkg AS
       p_exp_utc OUT TIMESTAMP WITH TIME ZONE
    ) RETURN VARCHAR2 IS
      -- l_header    VARCHAR2(32767) := '{"alg":"HS256","typ":"JWT"}';
-      l_payload   VARCHAR2(32767);
+      l_payload   VARCHAR2(32767); 
       l_secret    VARCHAR2(64)    := sys.get_jwt_secret;
       l_header_b64 VARCHAR2(32767);
       l_payload_b64 VARCHAR2(32767);
       l_signature RAW(256);
       l_signature_b64 VARCHAR2(32767);
       l_exp NUMBER;
-      l_jti VARCHAR2(64);
+      l_jti VARCHAR2(64); -- unique ID for token (entropy)
       l_now_utc   TIMESTAMP WITH TIME ZONE;
    BEGIN
       -- Current UTC time
