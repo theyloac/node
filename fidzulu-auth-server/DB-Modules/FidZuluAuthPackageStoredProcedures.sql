@@ -248,13 +248,13 @@ CREATE OR REPLACE PACKAGE BODY auth_pkg AS
       l_dbhash     VARCHAR2(256);
       l_hash       VARCHAR2(256);
       l_token      VARCHAR2(4000);
-      v_email      VARCHAR2(320);
+      v_email      VARCHAR2(320); -- what ever the user type in
       v_password   VARCHAR2(256);
       l_ip         VARCHAR(16);
       l_exp_utc    TIMESTAMP WITH TIME ZONE;
       l_exp        NUMBER;
    BEGIN
-      v_email    := NVL(TRIM(p_email), '');
+      v_email    := NVL(TRIM(p_email), ''); -- this saves user input and treat empty or whitespace-only as empty, which is important for the GUEST login case. The rest of the function relies on this behavior.
       v_password := NVL(TRIM(p_password), '');
       l_ip       := NVL(TRIM(p_ip), '');
 
@@ -319,6 +319,7 @@ CREATE OR REPLACE PACKAGE BODY auth_pkg AS
          l_role
       FROM users
       WHERE LOWER(user_email) = LOWER(v_email)
+         OR LOWER(user_username) = LOWER(v_email) -- allow login with either email or username
          AND user_isactive = 'Y';
 
       l_hash := hash_password(v_password);
