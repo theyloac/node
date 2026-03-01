@@ -15,6 +15,7 @@ describe('AuthController', () => {
         mockAuthService = {
             login: jest.fn(),
             register: jest.fn(),
+            logout: jest.fn(),
         };
 
         // create the testing module and inject the AuthController with the mocked AuthService
@@ -77,4 +78,23 @@ describe('AuthController', () => {
             expect(mockAuthService.register).toHaveBeenCalledTimes(1);
         });
     });
+
+
+    // Testing the logout method
+    describe('logout', () => {
+        it('should call the logout method of AuthService with the correct token', async () => {
+            //arrange
+            mockAuthService.logout.mockResolvedValue({ message: 'Logged out successfully' });
+
+            // act
+            await controller.logout({token: 'fake-token'});
+
+            // assert: check that the service method was called with the correct token
+            expect(mockAuthService.logout).toHaveBeenCalledWith({ token: 'fake-token' });
+            expect(mockAuthService.logout).toHaveBeenCalledTimes(1);
+
+        });
+    });
+
+
 });
