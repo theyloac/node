@@ -4,6 +4,7 @@ import { Connection } from 'oracledb';
 import { ORACLE_CONNECTION } from '../providers/oracle/oracle.provider';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { LogoutDto } from './dto/logout.dto';
 
 // AuthService encapsulates the business logic related to authentication.
 // It is responsible for talking to the database layer (via an Oracle
@@ -86,4 +87,17 @@ export class AuthService {
     }
 
 
+    // LOGOUT METHOD
+    async logout(dto: LogoutDto): Promise<any> {
+        const sql = `BEGIN
+        auth_pkg.logout_user(
+            p_token => :token
+        );
+        END;`;
+
+        const binds = {
+            token: dto.token
+        } as any;
+
+        await this.conn.execute(sql, binds);
 }
