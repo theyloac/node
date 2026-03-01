@@ -69,4 +69,20 @@ describe('register', () => {
         expect(result.userId).toBe(123);
     });
 });
+
+// Testing the logout
+describe('logout', () => {
+    it('should execute the logout procedure with the provided token', async () => {
+        // arrange: set up the input and mock behavior on shared mockConn
+        mockConn.execute.mockResolvedValue({});
+    
+        // act: call the logout method with a sample DTO
+        await service.logout({ token: 'fake-token' });
+
+        // assert
+        expect(mockConn.execute).toHaveBeenCalledWith(1);
+    });
+});
+
+
 });

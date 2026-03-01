@@ -100,4 +100,5 @@ export class AuthService {
         } as any;
 
         await this.conn.execute(sql, binds);
+    }
 }
