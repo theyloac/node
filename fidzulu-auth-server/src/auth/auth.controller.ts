@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDTO } from './dto/register.dto';
+import { LogoutDto } from './dto/logout.dto';
 
 // Controller is responsible for accepting HTTP requests and delegating
 // to the appropriate service methods. It should not contain business logic.
@@ -33,5 +34,13 @@ export class AuthController {
     @ApiResponse({ status: 201, description: 'Registration result' })
     async register(@Body() dto: RegisterDTO){
         return this.authService.register(dto);
+    }
+
+    // LOGOUT METHOD
+    @Post('logout')
+    @ApiOperation({ summary: 'Logout user' })
+    @ApiResponse({ status: 200, description: 'Logout result' })
+    async logout(@Body() dto: LogoutDto){
+        return this.authService.logout(dto);
     }
 }
