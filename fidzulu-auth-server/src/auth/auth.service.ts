@@ -5,6 +5,7 @@ import { ORACLE_CONNECTION } from '../providers/oracle/oracle.provider';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LogoutDto } from './dto/logout.dto';
+import { ValidateDto } from './dto/validate.dto';
 
 // AuthService encapsulates the business logic related to authentication.
 // It is responsible for talking to the database layer (via an Oracle
@@ -101,4 +102,40 @@ export class AuthService {
 
         await this.conn.execute(sql, binds);
     }
+
+    // VALIDATE TOKEN METHOD
+    async validate(dt: ValidateDto): Promise<any> {
+        const sql = `BEGIN
+            :newToken := auth_pkg.validate_token(
+                p_old_token => :token
+            );
+        END;`;
+
+        const binds = {
+            token: dt.token,
+            // the return type contain token + user_id
+            newToken: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 },
+        } as any;
+
+        const result = await this.conn.execute(sql, binds);
+        // the PL/SQL function returns a new token if the old one is valid, or null if it's not. We extract the new token from the OUT binds and return it to the caller.
+        const raw = result.outBinds?.newToken as string;
+
+        const [token, userId] = raw.split(',USER_ID='); // Assuming the PL/SQL function returns "newToken:userId"
+        const userId = parseInt(userId, 10); // Convert userId to a number
+
+        return {
+            token, 
+            user_id: userId
+        };
+    }
+
+
+
+
+
+
+
+
+
 }
