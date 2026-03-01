@@ -53,7 +53,7 @@ export class AuthService {
         const result = await this.conn.execute(sql, binds);
         return {
             token: result.outBinds?.token,
-            user_id: result.outBinds?.userId,
+            userId: result.outBinds?.userId,
             role: result.outBinds?.role
         }
     }
@@ -71,17 +71,17 @@ export class AuthService {
         END;`;
 
         const binds = {
-            firstname: dto.firstname;
-            lastname: dto.lastname;
-            username: dto.username;
-            email: dto.email;
-            password: dto.password;
+            firstname: dto.firstname,
+            lastname: dto.lastname,
+            username: dto.username,
+            email: dto.email,
+            password: dto.password,
             userId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
         } as any;
 
         const result = await this.conn.execute(sql, binds);
         return {
-            user_id: result.outBinds?.userId
+            userId: result.outBinds?.userId
         };
     }
 
