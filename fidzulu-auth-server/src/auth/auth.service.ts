@@ -121,12 +121,14 @@ export class AuthService {
         // the PL/SQL function returns a new token if the old one is valid, or null if it's not. We extract the new token from the OUT binds and return it to the caller.
         const raw = result.outBinds?.newToken as string;
 
-        const [token, userId] = raw.split(',USER_ID='); // Assuming the PL/SQL function returns "newToken:userId"
-        const userId = parseInt(userId, 10); // Convert userId to a number
+        // the PL/SQL package returns a string like "<token>,USER_ID=<id>";
+        // split once and parse the trailing user id
+        const [token, userIdPart] = raw.split(',USER_ID=');
+        const userIdNumber = parseInt(userIdPart, 10); // Convert userId to a number
 
         return {
-            token, 
-            user_id: userId
+            token,
+            user_id: userIdNumber
         };
     }
 
