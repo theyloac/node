@@ -80,7 +80,11 @@ describe('logout', () => {
         await service.logout({ token: 'fake-token' });
 
         // assert
-        expect(mockConn.execute).toHaveBeenCalledWith(1);
+        expect(mockConn.execute).toHaveBeenCalledWith(
+            expect.stringContaining('auth_pkg.logout_user'),
+            expect.objectContaining({ token: 'fake-token' })
+        );
+        expect(mockConn.execute).toHaveBeenCalledTimes(1);
     });
 });
 
