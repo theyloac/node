@@ -17,14 +17,18 @@ export class UsersService {
    */
   async getUserFromID(id: number): Promise<any> {
     // getUserFromId is a procedure not a function, don't return anything
-    const sql = `BEGIN auth_Pkg.getUserFromID(
-                  p_user_id => :id,
-                  p_first_name => :firstName,
-                  p_last_name => :lastName,
-                  p_username => :username,
-                  p_email => :email,
-                  p_role => :role);        
-                ); END;`;
+    const sql = `
+      BEGIN
+        auth_Pkg.getUserFromID(
+          p_user_id   => :id,
+          p_first_name=> :firstName,
+          p_last_name => :lastName,
+          p_username  => :username,
+          p_email     => :email,
+          p_role      => :role
+        );
+      END;
+    `;
 
 
     const binds = {
