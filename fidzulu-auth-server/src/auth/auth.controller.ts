@@ -5,6 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { ValidateDto } from './dto/validate.dto';
+import { VerifyDto } from './dto/verify.dto';
 
 // Controller is responsible for accepting HTTP requests and delegating
 // to the appropriate service methods. It should not contain business logic.
@@ -51,6 +52,14 @@ export class AuthController {
     @ApiResponse({ status: 200, description: 'New token issued, old token invalidated' })
     async validate(@Body() dto: ValidateDto) {
         return this.authService.validate(dto);
+    }
+
+    // VERIFY METHOD
+    @Post('verify')
+    @ApiOperation({ summary: 'Verify authentication token' })
+    @ApiResponse({ status: 200, description: 'Token verification result' })
+    async verify(@Body() dto: VerifyDto) {
+        return this.authService.verify(dto);
     }
 
 
