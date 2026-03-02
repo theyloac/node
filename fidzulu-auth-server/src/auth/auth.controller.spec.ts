@@ -18,6 +18,7 @@ describe('AuthController', () => {
             register: jest.fn(),
             logout: jest.fn(),
             validate: jest.fn(),
+            verify: jest.fn(),
         };
 
         // create the testing module and inject the AuthController with the mocked AuthService
@@ -112,6 +113,23 @@ describe('AuthController', () => {
             expect(mockAuthService.validate).toHaveBeenCalledWith({ token: 'old-fake-token' });
             expect(result).toBe(expected);
             expect(mockAuthService.validate).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    // Testing the verify method
+    describe('verify', () => {
+        it('should call the verify method of AuthService with the correct token and return result', async () => {
+            // arrange
+            const expected = { isValid: true, event: 'LOGIN', userId: 123, role: 'user', sesExpireDate: 999999 };
+            mockAuthService.verify.mockResolvedValue(expected);
+
+            // act
+            const result = await controller.verify({ token: 'check-token' });
+
+            // assert
+            expect(mockAuthService.verify).toHaveBeenCalledWith({ token: 'check-token' });
+            expect(result).toBe(expected);
+            expect(mockAuthService.verify).toHaveBeenCalledTimes(1);
         });
     });
 
