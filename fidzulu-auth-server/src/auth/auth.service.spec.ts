@@ -104,4 +104,30 @@ describe('AuthService', () => {
             expect(result.user_id).toBe(123);
         });
     });
+
+    // Testing the verify method
+    describe('verify', () => {
+        it('should return verification details when token is valid', async () => {
+            // arrange
+            mockConn.execute.mockResolvedValue({
+                outBinds: {
+                    isValid: 1, // numeric boolean from PL/SQL (1 = true)
+                    event: 'LOGIN',
+                    userId: 123,
+                    role: 'user',
+                    sesExpireDate: 999999,
+                },
+            });
+
+            // act
+            const result = await service.verify({ token: 'check-token' });
+
+            // assert
+            expect(result.isValid).toBe(true);
+            expect(result.event).toBe('LOGIN');
+            expect(result.userId).toBe(123);
+            expect(result.role).toBe('user');
+            expect(result.sesExpireDate).toBe(999999);
+        });
+    });
 });
