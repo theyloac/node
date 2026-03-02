@@ -43,7 +43,7 @@ CREATE OR REPLACE PACKAGE BODY auth_pkg AS
    ) RETURN VARCHAR2 IS
      -- l_header    VARCHAR2(32767) := '{"alg":"HS256","typ":"JWT"}';
       l_payload   VARCHAR2(32767); 
-      l_secret    VARCHAR2(64)    := sys.get_jwt_secret;
+      l_secret    VARCHAR2(64)  := 'MyDevelopmentSecretKey123!';
       l_header_b64 VARCHAR2(32767);
       l_payload_b64 VARCHAR2(32767);
       l_signature RAW(256);

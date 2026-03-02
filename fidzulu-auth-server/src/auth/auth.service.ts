@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import * as oracledb from 'oracledb';
+import oracledb from 'oracledb'; // FIX 1: Use default import
 import { Connection } from 'oracledb';
 import { ORACLE_CONNECTION } from '../providers/oracle/oracle.provider';
 import { LoginDto } from './dto/login.dto';
@@ -10,7 +10,7 @@ import { VerifyDto } from './dto/verify.dto';
 
 // AuthService encapsulates the business logic related to authentication.
 // It is responsible for talking to the database layer (via an Oracle
-// connection) and invoking the stored procedures in the FIDZULU package.
+// connection) and invoking the stored procedures in the auth_pkg package.
 
 @Injectable()
 export class AuthService {
@@ -21,36 +21,37 @@ export class AuthService {
     constructor(@Inject(ORACLE_CONNECTION) private readonly conn: Connection) {}
 
     /**
-   * Perform a login operation.
-   *
-   * @param dto - data transfer object containing username/password
-   * @param ip  - IP address of the client (provided by controller)
-   * @returns whatever the PL/SQL function returns (often a token or status code)
-   */
+    * Perform a login operation.
+    *
+    * @param dto - data transfer object containing username/password
+    * @param ip  - IP address of the client (provided by controller)
+    * @returns whatever the PL/SQL function returns (often a token or status code)
+    */
 
     // LOGIN METHOD
     async login(dto: LoginDto, ip: string): Promise<any> {
         // This is an anonymous PL/SQL block that calls the login_user procedure in the auth_pkg package.
         // Avoiding SQL injection is crucial, so we use bind variables (the :param syntax) instead of string concatenation.
         const sql = `BEGIN
-        :token :=auth_pkg.login_user(
-            p_email => :email,
-            p_password => :password,
-            p_ip => :ip,
-            p_user_id => :userId,
-            p_role => :role);
-            END;`;
-
+            :token := auth_pkg.login_user(
+                p_email => :email,
+                p_password => :password,
+                p_ip => :ip,
+                p_user_id => :userId,
+                p_role => :role
+            );
+        END;`;
 
         // Bind is how we pass parameters to the PL/SQL block. We specify the direction (IN/OUT) and type for each parameter.
         const binds = {
-            email : dto.email,
-            password : dto.password,
-            ip: ip,
-            token: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
-            userId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-            role: { dir: oracledb.BIND_OUT, type: oracledb.STRING }
-        } as any; // 'as any' is used to satisfy TypeScript since the shape of binds is dynamic based on the PL/SQL procedure signature.
+            email:    { val: dto.email,    type: oracledb.STRING },
+            password: { val: dto.password, type: oracledb.STRING },
+            ip:       { val: ip,           type: oracledb.STRING },
+            token:    { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 },
+            userId:   { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+            // FIX 2: Added maxSize for OUT string
+            role:     { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 }, 
+        } as any;
     
         // Execute the PL/SQL block with the provided SQL and binds. The result will contain the OUT parameters after execution.
         const result = await this.conn.execute(sql, binds);
@@ -58,19 +59,19 @@ export class AuthService {
             token: result.outBinds?.token,
             userId: result.outBinds?.userId,
             role: result.outBinds?.role
-        }
+        };
     }
 
     // REGISTER METHOD
-    async register (dto: RegisterDto): Promise<any>{
+    async register(dto: RegisterDto): Promise<any> {
         const sql = `BEGIN
-        :userId := auth_pkg.register_user(
-            p_firstname => :firstname,
-            p_lastname => :lastname,
-            p_username => :username,
-            p_email => :email,
-            p_password => :password
-        );
+            :userId := auth_pkg.register_user(
+                p_firstname => :firstname,
+                p_lastname => :lastname,
+                p_username => :username,
+                p_email => :email,
+                p_password => :password
+            );
         END;`;
 
         const binds = {
@@ -88,13 +89,12 @@ export class AuthService {
         };
     }
 
-
     // LOGOUT METHOD
     async logout(dto: LogoutDto): Promise<any> {
         const sql = `BEGIN
-        auth_pkg.logout_user(
-            p_token => :token
-        );
+            auth_pkg.logout_user(
+                p_token => :token
+            );
         END;`;
 
         const binds = {
@@ -154,9 +154,10 @@ export class AuthService {
             token: dto.token,
             // The PL/SQL BOOLEAN return value is captured as a NUMBER (1 = true, 0 = false)
             isValid: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-            event: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
+            // FIX 3: Added maxSize for OUT strings
+            event: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 },
             userId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-            role: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
+            role: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 },
             sesExpireDate: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         } as any;
 
@@ -174,7 +175,4 @@ export class AuthService {
             sesExpireDate: result.outBinds?.sesExpireDate
         };
     }
-
-
-
 }
