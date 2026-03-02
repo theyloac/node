@@ -16,13 +16,33 @@ export class UsersService {
    * JSON string or structured type).
    */
   async getUserFromID(id: number): Promise<any> {
-    const sql = 'BEGIN :ret := FIDZULU.Auth_Pkg.getUserFromID(:id); END;';
+    // getUserFromId is a procedure not a function, don't return anything
+    const sql = `BEGIN auth_Pkg.getUserFromID(
+                  p_user_id => :id,
+                  p_first_name => :firstName,
+                  p_last_name => :lastName,
+                  p_username => :username,
+                  p_email => :email,
+                  p_role => :role);        
+                ); END;`;
+
+
     const binds = {
-      ret: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
-      id,
+      id: id,
+      firstName: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
+      lastName: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
+      username: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
+      email: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
+      role: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
     } as any;
 
     const result = await this.conn.execute(sql, binds);
-    return result.outBinds?.ret;
+    return {
+      firstName: result.outBinds?.firstName,
+      lastName: result.outBinds?.lastName,
+      username: result.outBinds?.username,
+      email: result.outBinds?.email,
+      role: result.outBinds?.role,
+    }
   }
 }
