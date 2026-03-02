@@ -6,6 +6,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { ValidateDto } from './dto/validate.dto';
+import { VerifyDto } from './dto/verify.dto';
 
 // AuthService encapsulates the business logic related to authentication.
 // It is responsible for talking to the database layer (via an Oracle
@@ -132,11 +133,47 @@ export class AuthService {
         };
     }
 
+    // VERIFY TOKEN METHOD
+    async verify(dto: VerifyDto): Promise<any> {
+        // This PL/SQL block calls the verify_token function from the auth_pkg package.
+        // The verify_token function validates a given token and returns a BOOLEAN (1 for true, 0 for false)
+        // along with OUT parameters containing the token's metadata (event type, user_id, role, and expiration date).
+        const sql = `BEGIN
+            :isValid := auth_pkg.verify_token(
+                p_token => :token,
+                p_event => :event,
+                p_user_id => :userId,
+                p_role => :role,
+                p_ses_expiredate => :sesExpireDate
+            );
+        END;`;
 
+        // Bind the input parameter and define the shape and direction of all OUT parameters.
+        // Since Oracle BOOLEAN maps to NUMBER (1=true, 0=false), we bind isValid as a NUMBER type.
+        const binds = {
+            token: dto.token,
+            // The PL/SQL BOOLEAN return value is captured as a NUMBER (1 = true, 0 = false)
+            isValid: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+            event: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
+            userId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+            role: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
+            sesExpireDate: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+        } as any;
 
+        // Execute the PL/SQL block and extract the OUT parameters.
+        const result = await this.conn.execute(sql, binds);
+        
+        // Convert the numeric boolean (1/0 from Oracle) to a proper boolean value.
+        const isValid = result.outBinds?.isValid === 1;
 
-
-
+        return {
+            isValid,
+            event: result.outBinds?.event,
+            userId: result.outBinds?.userId,
+            role: result.outBinds?.role,
+            sesExpireDate: result.outBinds?.sesExpireDate
+        };
+    }
 
 
 
