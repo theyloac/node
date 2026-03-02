@@ -2,7 +2,7 @@ import { Body, Controller, Ip, Post } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDTO } from './dto/register.dto';
+import { RegisterDto } from './dto/register.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { ValidateDto } from './dto/validate.dto';
 
@@ -33,7 +33,7 @@ export class AuthController {
     @Post('register')
     @ApiOperation({ summary: 'Register new user' })
     @ApiResponse({ status: 201, description: 'Registration result' })
-    async register(@Body() dto: RegisterDTO){
+    async register(@Body() dto: RegisterDto){
         return this.authService.register(dto);
     }
 
@@ -53,5 +53,5 @@ export class AuthController {
         return this.authService.validate(dto);
     }
 
-    
+
 }

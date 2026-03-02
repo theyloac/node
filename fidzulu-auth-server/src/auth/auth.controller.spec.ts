@@ -1,6 +1,7 @@
 import {Test, TestingModule} from '@nestjs/testing';
 import {AuthController} from './auth.controller';
 import {AuthService} from './auth.service';
+import { mock } from 'node:test';
 
 
 // This is a test suite for the AuthController. It uses Jest and Nest's testing utilities
@@ -16,6 +17,7 @@ describe('AuthController', () => {
             login: jest.fn(),
             register: jest.fn(),
             logout: jest.fn(),
+            validate: jest.fn(),
         };
 
         // create the testing module and inject the AuthController with the mocked AuthService
@@ -93,6 +95,23 @@ describe('AuthController', () => {
             expect(mockAuthService.logout).toHaveBeenCalledWith({ token: 'fake-token' });
             expect(mockAuthService.logout).toHaveBeenCalledTimes(1);
 
+        });
+    });
+
+    // Testing the validate method
+    describe('validate', () => {
+        it('should call the validate method of AuthService with the correct token', async () => {
+            // arrange
+            const expected = { token: 'new-fake-token', user_id: 123 };
+            mockAuthService.validate.mockResolvedValue(expected);
+
+            // act
+            const result = await controller.validate({ token: 'old-fake-token' });
+
+            // assert: check that the service method was called with the correct token and that the result matches what we expect
+            expect(mockAuthService.validate).toHaveBeenCalledWith({ token: 'old-fake-token' });
+            expect(result).toBe(expected);
+            expect(mockAuthService.validate).toHaveBeenCalledTimes(1);
         });
     });
 

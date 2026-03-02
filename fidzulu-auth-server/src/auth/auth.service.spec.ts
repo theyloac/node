@@ -30,63 +30,78 @@ describe('AuthService', () => {
         service = module.get<AuthService>(AuthService);
     });
 
-describe('login', () => {
-    it('should return a token, user_id, and role on successful login', async () => {
-        // arrange: set up the input and mock behavior on shared mockConn
-        mockConn.execute.mockResolvedValue({
-            outBinds: { token: 'fake-token', userId: 123, role: 'user' },
-        });
+    describe('login', () => {
+        it('should return a token, user_id, and role on successful login', async () => {
+            // arrange: set up the input and mock behavior on shared mockConn
+            mockConn.execute.mockResolvedValue({
+                outBinds: { token: 'fake-token', userId: 123, role: 'user' },
+            });
 
-        // act: call the login method with a sample DTO and IP
-        const result = await service.login({ email: 'john@example.com', password: 'password123' }, 
-                                            '192.168.1.1');
+            // act: call the login method with a sample DTO and IP
+            const result = await service.login({ email: 'john@example.com', password: 'password123' }, 
+                                                '192.168.1.1');
+            
+            // assert: verify that the result matches the expected output
+            expect(result.token).toBe('fake-token');
+            expect(result.userId).toBe(123);
+            expect(result.role).toBe('user');
+        });
+    });
+
+    // Testing the register
+    describe('register', () => {
+        it('should return a userId on successful registration', async () => {
+            // arrange: set up the input and mock behavior on shared mockConn
+            mockConn.execute.mockResolvedValue({
+                outBinds: { userId: 123 },
+            });
+
+            // act: call the register method with a sample DTO
+            const result = await service.register({ 
+                email: 'john@example.com', 
+                password: 'password123',
+                firstname: 'John',
+                lastname: 'Doe',
+                username: 'johndoe'
+            });
+
+            // assert: verify that the result matches the expected output
+            expect(result.userId).toBe(123);
+        });
+    });
+
+    // Testing the logout
+    describe('logout', () => {
+        it('should execute the logout procedure with the provided token', async () => {
+            // arrange: set up the input and mock behavior on shared mockConn
+            mockConn.execute.mockResolvedValue({});
         
-        // assert: verify that the result matches the expected output
-        expect(result.token).toBe('fake-token');
-        expect(result.userId).toBe(123);
-        expect(result.role).toBe('user');
-    });
-});
+            // act: call the logout method with a sample DTO
+            await service.logout({ token: 'fake-token' });
 
-// Testing the register
-describe('register', () => {
-    it('should return a userId on successful registration', async () => {
-        // arrange: set up the input and mock behavior on shared mockConn
-        mockConn.execute.mockResolvedValue({
-            outBinds: { userId: 123 },
+            // assert
+            expect(mockConn.execute).toHaveBeenCalledWith(
+                expect.stringContaining('auth_pkg.logout_user'),
+                expect.objectContaining({ token: 'fake-token' })
+            );
+            expect(mockConn.execute).toHaveBeenCalledTimes(1);
         });
+    });
 
-        // act: call the register method with a sample DTO
-        const result = await service.register({ 
-            email: 'john@example.com', 
-            password: 'password123',
-            firstname: 'John',
-            lastname: 'Doe',
-            username: 'johndoe'
+    // Testing the validate method
+    describe('validate', () => {
+        it('should return a new token and user_id on successful validation', async () => {
+            // arrange: set up the input and mock behavior on shared mockConn
+            mockConn.execute.mockResolvedValue({
+                outBinds: { newToken: 'new-fake-token,USER_ID=123' },
+            });
+
+            // act
+            const result = await service.validate({ token: 'old-fake-token' });
+
+            // assert
+            expect(result.token).toBe('new-fake-token');
+            expect(result.user_id).toBe(123);
         });
-
-        // assert: verify that the result matches the expected output
-        expect(result.userId).toBe(123);
     });
-});
-
-// Testing the logout
-describe('logout', () => {
-    it('should execute the logout procedure with the provided token', async () => {
-        // arrange: set up the input and mock behavior on shared mockConn
-        mockConn.execute.mockResolvedValue({});
-    
-        // act: call the logout method with a sample DTO
-        await service.logout({ token: 'fake-token' });
-
-        // assert
-        expect(mockConn.execute).toHaveBeenCalledWith(
-            expect.stringContaining('auth_pkg.logout_user'),
-            expect.objectContaining({ token: 'fake-token' })
-        );
-        expect(mockConn.execute).toHaveBeenCalledTimes(1);
-    });
-});
-
-
 });
