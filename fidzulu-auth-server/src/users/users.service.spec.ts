@@ -29,8 +29,8 @@ describe('UsersService', () => {
       // arrange
       mockConn.execute.mockResolvedValue({
         outBinds: {
-          firstName: 'John',
-          lastName:  'Doe',
+          firstname: 'John',
+          lastname:  'Doe',
           username:  'johndoe',
           email:     'john@example.com',
           role:      'USER',
@@ -41,8 +41,8 @@ describe('UsersService', () => {
       const result = await service.getUserFromID(1);
 
       // assert
-      expect(result.firstName).toBe('John');
-      expect(result.lastName).toBe('Doe');
+      expect(result.firstname).toBe('John');
+      expect(result.lastname).toBe('Doe');
       expect(result.username).toBe('johndoe');
       expect(result.email).toBe('john@example.com');
       expect(result.role).toBe('USER');

@@ -7,7 +7,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { ValidateDto } from './dto/validate.dto';
 import { VerifyDto } from './dto/verify.dto';
-import { handleOracleError } from './oracle-error.helper';
+import { handleOracleError } from '../common/oracle-error.helper';
 
 // AuthService encapsulates the business logic related to authentication.
 // It is responsible for talking to the database layer (via an Oracle
@@ -60,6 +60,7 @@ export class AuthService {
         // Execute the PL/SQL block with the provided SQL and binds. The result will contain the OUT parameters after execution.
         try {
             const result = await this.conn.execute(sql, binds);
+            await this.conn.commit(); // Commit the transaction after successful login
             return {
                 token: result.outBinds?.token,
                 userId: result.outBinds?.userId,
@@ -93,6 +94,7 @@ export class AuthService {
 
         try {
             const result = await this.conn.execute(sql, binds);
+            await this.conn.commit(); // Commit the transaction after successful registration
             return {
                 userId: result.outBinds?.userId
             };
@@ -115,6 +117,7 @@ export class AuthService {
 
         try {
             await this.conn.execute(sql, binds);
+            await this.conn.commit(); // Commit the transaction after successful logout
         } catch (error) {
             handleOracleError(error); // Centralized error handling for Oracle errors
         }
@@ -136,6 +139,7 @@ export class AuthService {
 
         try {
             const result = await this.conn.execute(sql, binds);
+            await this.conn.commit(); // Commit the transaction after successful token validation
             // the PL/SQL function returns a new token if the old one is valid, or null if it's not. We extract the new token from the OUT binds and return it to the caller.
             const raw = result.outBinds?.newToken as string;
     
@@ -187,6 +191,7 @@ export class AuthService {
         // Execute the PL/SQL block and extract the OUT parameters.
         try {
             const result = await this.conn.execute(sql, binds);
+
             
             // Convert the numeric boolean (1/0 from Oracle) to a proper boolean value.
             const isValid = result.outBinds?.isValid === 1;

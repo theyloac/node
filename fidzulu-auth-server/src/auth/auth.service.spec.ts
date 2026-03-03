@@ -92,7 +92,7 @@ describe('AuthService', () => {
 
             // assert
             expect(mockConn.execute).toHaveBeenCalledWith(
-                expect.stringContaining('auth_pkg.logout_user'),
+                expect.stringContaining('auth_pkg.logout'),
                 expect.objectContaining({ token: 'fake-token' })
             );
             expect(mockConn.execute).toHaveBeenCalledTimes(1);

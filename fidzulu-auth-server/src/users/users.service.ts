@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import * as oracledb from 'oracledb';
-import { Connection } from 'oracledb';
+import oracledb, { Connection } from 'oracledb';
 import { ORACLE_CONNECTION } from '../providers/oracle/oracle.provider';
+import { handleOracleError } from 'src/common/oracle-error.helper';
 
 // Service used by the users controller to fetch user information from the
 // database. Separation of concerns keeps the controller focused on HTTP.
@@ -15,38 +15,49 @@ export class UsersService {
    * The returned value is whatever the database function produces (likely a
    * JSON string or structured type).
    */
+  
   async getUserFromID(id: number): Promise<any> {
-    // getUserFromId is a procedure not a function, don't return anything
+    console.log('id received:', id, typeof id);
+    
     const sql = `
-      BEGIN
-        auth_Pkg.getUserFromID(
-          p_user_id   => :id,
-          p_first_name=> :firstName,
-          p_last_name => :lastName,
-          p_username  => :username,
-          p_email     => :email,
-          p_role      => :role
-        );
-      END;
+        BEGIN
+            auth_pkg.getUserFromID(
+                p_user_id   => :id,
+                p_firstname => :firstname,
+                p_lastname  => :lastname,
+                p_username  => :username,
+                p_email     => :email,
+                p_role      => :role
+            );
+        END;
     `;
 
+    const binds: any = {
+        id:        { val: id, type: oracledb.NUMBER },
+        firstname: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 },
+        lastname:  { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 },
+        username:  { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 },
+        email:     { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 },
+        role:      { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 50 },
+    };
 
-    const binds = {
-      id: id,
-      firstName: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
-      lastName: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
-      username: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
-      email: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
-      role: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
-    } as any;
+    console.log('binds:', JSON.stringify(binds));
+    console.log('BIND_OUT value:', oracledb.BIND_OUT);
+    console.log('STRING value:', oracledb.STRING);
+    console.log('NUMBER value:', oracledb.NUMBER);
 
-    const result = await this.conn.execute(sql, binds);
-    return {
-      firstName: result.outBinds?.firstName,
-      lastName: result.outBinds?.lastName,
-      username: result.outBinds?.username,
-      email: result.outBinds?.email,
-      role: result.outBinds?.role,
+    try {
+        const result = await this.conn.execute(sql, binds);
+        return {
+            firstname: result.outBinds?.firstname,
+            lastname:  result.outBinds?.lastname,
+            username:  result.outBinds?.username,
+            email:     result.outBinds?.email,
+            role:      result.outBinds?.role,
+        };
+    } catch (error) {
+        console.log('Error message:', error?.message);
+        handleOracleError(error);
     }
-  }
+}
 }
