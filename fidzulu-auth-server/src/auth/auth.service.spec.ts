@@ -1,5 +1,4 @@
 import {Test, TestingModule} from '@nestjs/testing';
-import * as oracledb from 'oracledb';
 import {AuthService} from './auth.service';
 import { ORACLE_CONNECTION } from '../providers/oracle/oracle.provider';
 
@@ -51,9 +50,9 @@ describe('AuthService', () => {
             expect(mockConn.execute).toHaveBeenCalledWith(
                 expect.any(String),
                 expect.objectContaining({
-                    email:    'john@example.com',
-                    password: 'password123',
-                    ip:       { val: '192.168.1.1', type: oracledb.STRING },
+                    email:    expect.objectContaining({ val: 'john@example.com' }),
+                    password: expect.objectContaining({ val: 'password123' }),
+                    ip:       expect.objectContaining({ val: '192.168.1.1' }),
                     token:    expect.objectContaining({ maxSize: 4000 })
                 })
             );
