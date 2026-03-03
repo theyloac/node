@@ -1,4 +1,4 @@
-import { Body, Controller, Ip, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Ip, Post } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -40,6 +40,7 @@ export class AuthController {
 
     // LOGOUT METHOD
     @Post('logout')
+    @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Logout user' })
     @ApiResponse({ status: 200, description: 'Logout result' })
     async logout(@Body() dto: LogoutDto){

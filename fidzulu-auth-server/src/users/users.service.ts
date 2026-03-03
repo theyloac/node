@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import oracledb, { Connection } from 'oracledb';
 import { ORACLE_CONNECTION } from '../providers/oracle/oracle.provider';
-import { handleOracleError } from 'src/common/oracle-error.helper';
+import { handleOracleError } from '../common/oracle-error.helper';
 
 // Service used by the users controller to fetch user information from the
 // database. Separation of concerns keeps the controller focused on HTTP.
